@@ -1,0 +1,109 @@
+#version 430 core
+
+in vec2 UV;
+in vec3 fragPosition;
+layout(location = 0) out vec3 color;
+uniform sampler2D tex;
+uniform sampler2D bump;
+uniform vec3 PrimaryLightPosition;
+uniform vec3 PrimaryLightIntensity;
+uniform vec3 SecondaryLightPosition;
+uniform vec3 SecondaryLightIntensity;
+uniform float fadeout;
+uniform vec3 lightPositions[10];
+uniform vec3 lightIntensities[10];
+
+void main()
+{
+	float FadeRatio = (fadeout) < 1.0 ? fadeout : 1.0 - (fadeout - 1.0);
+	
+	vec3 PrimarySurfToLight = PrimaryLightPosition - fragPosition;
+	//vec3 PrimarySurfToLight = lightPositions[0] - fragPosition;
+
+	vec3 SecondarySurfToLight = SecondaryLightPosition - fragPosition;
+
+	vec3 fade1;
+	vec3 fade2;
+
+	vec3 t = normalize(dFdx(fragPosition));
+	vec3 n = normalize(cross(dFdx(fragPosition),dFdy(fragPosition)));
+	vec3 b = normalize(cross(t,n));
+
+	mat3 tangentSpace = mat3(t,b,n);
+
+	vec3 normal = normalize(tangentSpace*(vec3(0.0,0.0,1.0)+((texture(bump, UV).xyz*2)-1)));
+
+	float PrimaryAngle = dot(normalize(PrimarySurfToLight),normal);
+
+	float PrimaryBrightness = PrimaryAngle/(length(PrimarySurfToLight)/4);
+	PrimaryBrightness = clamp(PrimaryBrightness, 0, 1);
+
+	vec3 PrimaryColor = PrimaryBrightness*PrimaryLightIntensity*texture(tex, UV).xyz;
+	//vec3 PrimaryColor = PrimaryBrightness*lightIntensities[0]*texture(tex, UV).xyz;
+
+		
+	
+	
+	fade1 = PrimaryColor;
+
+	for(int i = 0; i < 10; i++)
+	{
+		vec3 theSurfToLight = lightPositions[i] - fragPosition;
+
+		float theAngle = dot(normalize(theSurfToLight),normal);
+
+		float theBrightness = theAngle/(length(theSurfToLight)/3);
+		theBrightness = clamp(theBrightness, 0, 1);
+
+		vec3 theColor = theBrightness*lightIntensities[i];
+		
+		fade1 = fade1+theColor;
+	}
+
+	fade1 = fade1*texture(tex, UV).xyz;
+
+
+	float secdist = length(SecondarySurfToLight);
+	
+	float v = (fract(UV.y*16) < (1 - fract(UV.y*16))) ? fract(UV.y*16) : (1 - fract(UV.y*16));
+	float h = (fract(UV.x*16) < (1 - fract(UV.x*16))) ? fract(UV.x*16) : (1 - fract(UV.x*16));
+
+	if(secdist <= SecondaryLightIntensity.z)
+	{
+		if(h < 0.05)
+		{	
+			float f = h*20;
+			fade1 = fade1*f + vec3(1.0*(1-f),1.0*(1-f),1.0*(1-f)*2);
+		}
+		if(v < 0.05)
+		{	
+			float f = v*20;
+			fade1 = fade1*f + vec3(1.0*(1-f),1.0*(1-f),1.0*(1-f)*2);
+		}
+    }
+
+	if(length(PrimarySurfToLight) < (1.0-FadeRatio)*20.0)
+	{
+		if(h < 0.05)
+		{	
+			float f = h*20;
+			fade2 = fade1*f + vec3(1.0*(1-f),1.0*(1-f),1.0*(1-f)*2);
+		}
+		if(v < 0.05)
+		{	
+			float f = v*20;
+			fade2 = fade1*f + vec3(1.0*(1-f),1.0*(1-f),1.0*(1-f)*2);
+		}
+	}
+	else
+	{
+		fade2 = vec3(0.0,0.0,0.0);
+	}
+
+	if(FadeRatio > 0.5)
+		color = fade2;
+	else if(FadeRatio < 0.0)
+		color = fade1;
+	else
+		color = fade2*FadeRatio*2 + fade1*(1 - FadeRatio*2);
+}

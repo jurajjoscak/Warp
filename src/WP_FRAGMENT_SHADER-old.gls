@@ -1,0 +1,39 @@
+#version 430 core
+
+in vec2 UV;
+in vec3 fragPosition;
+layout(location = 0) out vec3 color;
+uniform sampler2D tex;
+uniform vec3 PrimaryLightPosition;
+uniform vec3 PrimaryLightIntensity;
+uniform vec3 SecondaryLightPosition;
+uniform vec3 SecondaryLightIntensity;
+
+void main()
+{
+	vec3 PrimarySurfToLight = PrimaryLightPosition - fragPosition;
+	vec3 SecondarySurfToLight = SecondaryLightPosition - fragPosition;
+
+	vec3 normal = normalize(cross(dFdx(fragPosition),dFdy(fragPosition)));
+
+	float PrimaryAngle = dot(normalize(PrimarySurfToLight),normal);
+
+	float PrimaryBrightness = PrimaryAngle/(length(PrimarySurfToLight)/4);
+	PrimaryBrightness = clamp(PrimaryBrightness, 0, 1);
+
+	vec3 PrimaryColor = PrimaryBrightness*PrimaryLightIntensity*texture(tex, UV).xyz;
+	vec3 SecondaryColor;
+
+	float secdist = length(SecondarySurfToLight);
+    if(secdist > SecondaryLightIntensity.z)
+	{
+		color = 0.05+PrimaryColor;
+    }
+	else
+	{
+		if(fract(secdist*4) < 0.3)
+			color = 0.05+PrimaryColor*2.0;//+vec3(0.0,0.0,0.1);
+		else
+			color = 0.05+PrimaryColor+vec3(0.0,0.0,0.05);
+    }
+}

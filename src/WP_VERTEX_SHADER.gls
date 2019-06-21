@@ -1,0 +1,20 @@
+#version 430 core
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUVs;
+
+out vec2 UV;
+out vec3 fragPosition;
+uniform mat4 MVP;
+uniform vec3 LevelSize;
+uniform vec3 LevelOrigin;
+uniform sampler3D deformTex;
+
+void main()
+{
+    UV = vertexUVs.yx;
+
+	vec3 deformed = vertexPosition_modelspace + texture(deformTex, (vertexPosition_modelspace-LevelOrigin)/LevelSize).xyz;
+	fragPosition = deformed;
+	gl_Position = MVP * vec4(deformed,1);
+}

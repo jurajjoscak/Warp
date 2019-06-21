@@ -1,0 +1,15 @@
+// Nieko¾ko konštánt
+#define SCREEN_W 1366
+#define SCREEN_H 768
+//#define SCREEN_W 1920
+//#define SCREEN_H 1080
+#define MAX_H_SPEED 0.15
+#define MAX_V_SPEED 0.25
+#define NORMAL_FRAMETIME 16
+#define CURSOR_MAX 20.0
+#define NEAR 0.02
+#define FAR 50.0
+#define LEFT -0.01*SCREEN_W/SCREEN_H
+#define RIGHT 0.01*SCREEN_W/SCREEN_H
+#define TOP 0.01
+#define BOTTOM -0.01

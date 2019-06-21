@@ -1,0 +1,38 @@
+#version 430 core
+
+uniform float amount;
+uniform vec3 center;
+uniform vec3 direction;
+uniform float radius;
+uniform float density;
+uniform vec3 offset;
+uniform bool reset;
+uniform int width;
+layout(RGBA32F, binding = 0) restrict uniform image3D warpTex;
+
+layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	
+    float dist_ratio = 0.0;
+    float trans_dist = 0.0;
+
+    vec3 pxl = imageLoad(warpTex, ivec3(gl_GlobalInvocationID)).xyz;
+
+    if(reset == false)
+    {
+        vec3 tmp = vec3((gl_GlobalInvocationID.xyz*density)+offset+pxl) - center;
+
+        if(length(tmp) <= radius)
+        {
+            dist_ratio = length(tmp)/radius;
+            trans_dist = dot(tmp, direction) *(1-dist_ratio)*amount;
+
+            imageStore(warpTex, ivec3(gl_GlobalInvocationID), vec4(pxl+(direction*trans_dist), 0.0));
+        }
+    }
+    else
+    {
+        imageStore(warpTex, ivec3(gl_GlobalInvocationID), vec4(pxl - pxl*amount, 0.0));
+    }
+}
