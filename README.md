@@ -1,0 +1,3 @@
+# Warp
+
+This repository contains the code from my bachelor's thesis, later improved during PGR course at FIT VUT. This thesis focuses on global deformation of 3D geometry and using it in a videogame. The aim is to explore different methods for deformation of geometry in real time, consider their usability in context of a videogame, and solve specific problems, which can arise while developing such game. This knowledge is then used to implemennt the game in C++ programming language using OpenGL graphics library. Full text of this thesis can be found here: http://www.fit.vutbr.cz/study/DP/BP.php?id=18606
